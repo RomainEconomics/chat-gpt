@@ -7,8 +7,10 @@ import time
 import os
 import sys
 import openai
+import typer
 
-time.sleep(0.1)
+app = typer.Typer()
+
 
 def main():
 
@@ -53,7 +55,12 @@ def main():
         console.print()
 
 
-if __name__ == "__main__":
+
+@app.command()
+def start():
+    """
+    Start conversation with our assistant
+    """
     try:
         main()
     except KeyboardInterrupt:
