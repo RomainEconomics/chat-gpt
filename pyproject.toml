@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chat-gpt"
+name = "custom-chat-gpt"
 version = "0.1.0"
 description = "Use chapgpt from your terminal"
 authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
