@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "chat-gpt"
+version = "0.1.0"
+description = "Use chapgpt from your terminal"
+authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
+readme = "README.md"
+packages = [{include = "chat_gpt"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.27.0"
+rich = "^13.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
