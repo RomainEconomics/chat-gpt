@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "custom-chat-gpt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Use chapgpt from your terminal"
 authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
 readme = "README.md"
 packages = [{include = "chat_gpt"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 openai = "^0.27.0"
 rich = "^13.3"
 typer = "^0.7.0"
