@@ -47,8 +47,7 @@ def main():
             for chunk in completion:
                 if "content" in chunk.choices[0].delta:
                     chat_response += chunk.choices[0].delta.content
-                else:
-                    pass
+
                 live_chat.update(Markdown(chat_response))
 
         messages.append({"role": "assistant", "content": chat_response})
