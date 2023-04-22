@@ -1,75 +1,24 @@
 
-from typing import Any, Callable
-from rich.prompt import Prompt
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.live import Live
 import os
 import sys
 import openai
 import typer
-from langchain.chat_models import ChatOpenAI
-from langchain.callbacks import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.schema import (
-    HumanMessage,
-    SystemMessage,
-    BaseMessage
-)
+from rich.console import Console
+from youtube_transcript_api import TranscriptsDisabled
+from chat_gpt.commands.chat import chat
+from chat_gpt.commands.youtube import chat_with_yt_video
 
 app = typer.Typer()
 
+console = Console()
 
-class StreamingTerminalCallbackHandler(StreamingStdOutCallbackHandler):
-    def __init__(self, output_callback: Callable[[str], None] = None, **kwargs):
-        super().__init__(**kwargs)
-        self.output = ""
-        self.output_callback = output_callback
+openai.api_key = os.environ.get('OPENAI_API_KEY')
+if openai.api_key is None:
+    console.print('[red]Please set the OPENAI_API_KEY environment variable.')
+    exit(1)  
 
-    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        self.output += token
-        if self.output_callback is not None:
-            self.output_callback(self.output)
-
-
-def rich_streaming_display(token: str, live_chat) -> None:
-    live_chat.update(Markdown(token))
-
-def chat():
-
-    console = Console()
     
-    openai.api_key = os.environ.get('OPENAI_API_KEY')
-    if openai.api_key is None:
-        console.print('[red]Please set the OPENAI_API_KEY environment variable.')
-        exit(1)  
-
-    messages: list[BaseMessage] = [
-        SystemMessage(content="You’re a helpful programming assistant. Answers the questions as a professional programmer."),
-    ]
-
-    console.print("Starting a chat ...")
-
-    while True:
-        console.print()
-        content = Prompt.ask("[red][b]User [b/]")
-        console.print()
-        messages.append(HumanMessage(content=content))
-
-        stream_manager = CallbackManager(
-            [StreamingTerminalCallbackHandler(output_callback= lambda x: rich_streaming_display(x, live_chat))]
-        )
-        chat = ChatOpenAI(temperature=0, streaming=True, callback_manager=stream_manager, verbose=True)
-
-        console.print("[blue][b]Assistant :[/b][/blue]")
-        with Live(console=console, refresh_per_second=2) as live_chat:
-            ai_response = chat(messages)
-        
-        messages.append(ai_response)
-        console.print()
-
-
-@app.command()
+@app.command("chat")
 def start():
     """
     Start conversation with our assistant
@@ -81,3 +30,31 @@ def start():
             sys.exit(130)
         except SystemExit:
             os._exit(130)
+
+
+@app.command()
+def youtube(url: str, language: str = 'en'):
+    """
+    Start conversation with our assistant using a youtube video transcript
+    """
+
+    try:
+        chat_with_yt_video(url, language)
+    except TranscriptsDisabled as e:
+        console.print("\n[red]Transcripts are disabled for this video or the video you're trying to extract doesn't exist.")
+        console.print(e)
+    except KeyboardInterrupt:
+        try:
+            sys.exit(130)
+        except SystemExit:
+            os._exit(130)
+
+
+
+@app.callback()
+def callback():
+    """
+    CLI which allows you to chat with our lovely assistant.
+
+    Possible to chat with gpt-3.5 or with a youtube video transcript.
+    """
