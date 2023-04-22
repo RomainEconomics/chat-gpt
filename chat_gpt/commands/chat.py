@@ -23,9 +23,9 @@ def chat():
     ]
 
     console.print("Starting a chat ...")
-
+    console.print()
+    
     while True:
-        console.print()
         content = Prompt.ask("[red][b]User [b/]")
         console.print()
         messages.append(HumanMessage(content=content))

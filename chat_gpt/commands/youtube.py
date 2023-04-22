@@ -1,4 +1,4 @@
-import sys
+
 from langchain.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -7,23 +7,12 @@ from langchain.chat_models import ChatOpenAI
 from langchain import PromptTemplate
 from langchain.chains import LLMChain
 from rich.console import Console
-from rich.markdown import Markdown
 from rich.live import Live
-from langchain.schema import (
-    HumanMessage,
-    SystemMessage,
-    BaseMessage
-)
 from rich.prompt import Prompt
 
 from typing import Any
 from rich.live import Live
 from langchain.callbacks import CallbackManager
-from langchain.schema import (
-    HumanMessage,
-    SystemMessage,
-    BaseMessage
-)
 from chat_gpt.utils.callbacks import StreamingTerminalCallbackHandler, rich_streaming_display
 
 
@@ -97,7 +86,7 @@ def chat_with_yt_video(url: str, language: str):
     console.print("[green]You can now ask questions about the video's transcript.\n")
 
     while True:
-        content = Prompt.ask("[red][b]User [b/]: ")
+        content = Prompt.ask("[red][b]User[b/]")
         console.print()
 
         response, docs = get_response_from_query(db, content, k=5, console=console)
