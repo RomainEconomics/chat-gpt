@@ -1,18 +1,41 @@
 
+from typing import Any, Callable
 from rich.prompt import Prompt
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.live import Live
-import time
 import os
 import sys
 import openai
 import typer
+from langchain.chat_models import ChatOpenAI
+from langchain.callbacks import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.schema import (
+    HumanMessage,
+    SystemMessage,
+    BaseMessage
+)
 
 app = typer.Typer()
 
 
-def main():
+class StreamingTerminalCallbackHandler(StreamingStdOutCallbackHandler):
+    def __init__(self, output_callback: Callable[[str], None] = None, **kwargs):
+        super().__init__(**kwargs)
+        self.output = ""
+        self.output_callback = output_callback
+
+    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+        self.output += token
+        if self.output_callback is not None:
+            self.output_callback(self.output)
+
+
+def rich_streaming_display(token: str, live_chat) -> None:
+    live_chat.update(Markdown(token))
+
+def chat():
 
     console = Console()
     
@@ -21,10 +44,9 @@ def main():
         console.print('[red]Please set the OPENAI_API_KEY environment variable.')
         exit(1)  
 
-    messages = [
-     {"role": "system", "content" : "You’re a helpful programming assistant"}
+    messages: list[BaseMessage] = [
+        SystemMessage(content="You’re a helpful programming assistant. Answers the questions as a professional programmer."),
     ]
-
 
     console.print("Starting a chat ...")
 
@@ -32,27 +54,19 @@ def main():
         console.print()
         content = Prompt.ask("[red][b]User [b/]")
         console.print()
-        messages.append({"role": "user", "content": content})
+        messages.append(HumanMessage(content=content))
 
-        completion = openai.ChatCompletion.create(
-          model="gpt-3.5-turbo",
-          messages=messages,
-          temperature=0,
-          stream=True 
+        stream_manager = CallbackManager(
+            [StreamingTerminalCallbackHandler(output_callback= lambda x: rich_streaming_display(x, live_chat))]
         )
+        chat = ChatOpenAI(temperature=0, streaming=True, callback_manager=stream_manager, verbose=True)
 
-        console.print("[blue][b]Assistant :[/b]")
-        chat_response = "" 
+        console.print("[blue][b]Assistant :[/b][/blue]")
         with Live(console=console, refresh_per_second=2) as live_chat:
-            for chunk in completion:
-                if "content" in chunk.choices[0].delta:
-                    chat_response += chunk.choices[0].delta.content
-
-                live_chat.update(Markdown(chat_response))
-
-        messages.append({"role": "assistant", "content": chat_response})
+            ai_response = chat(messages)
+        
+        messages.append(ai_response)
         console.print()
-
 
 
 @app.command()
@@ -61,7 +75,7 @@ def start():
     Start conversation with our assistant
     """
     try:
-        main()
+        chat()
     except KeyboardInterrupt:
         try:
             sys.exit(130)
