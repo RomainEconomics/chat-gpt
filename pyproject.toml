@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "custom-chat-gpt"
-version = "0.2.1"
+version = "0.2.2"
 description = "Use chapgpt from your terminal"
 authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
 readme = "README.md"
