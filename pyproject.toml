@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "custom-chat-gpt"
-version = "0.2.2"
+version = "0.2.3"
 description = "Use chapgpt from your terminal"
 authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
 readme = "README.md"
@@ -26,3 +26,6 @@ ipykernel = "^6.22.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+max_length_line = 119

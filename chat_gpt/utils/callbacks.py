@@ -1,10 +1,8 @@
+from typing import Any
+from typing import Callable
 
-import os
-from typing import Any, Callable
-from rich.markdown import Markdown
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-
+from rich.markdown import Markdown
 
 
 class StreamingTerminalCallbackHandler(StreamingStdOutCallbackHandler):
