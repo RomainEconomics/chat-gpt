@@ -1,17 +1,15 @@
-from langchain.callbacks import CallbackManager
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import BaseMessage
-from langchain.schema import HumanMessage
-from langchain.schema import SystemMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from rich.console import Console
-from rich.live import Live
 from rich.prompt import Prompt
+from rich.markdown import Markdown
+from rich.live import Live
 
-from chat_gpt.utils.callbacks import rich_streaming_display
-from chat_gpt.utils.callbacks import StreamingTerminalCallbackHandler
 
+def chat(model_name: str, markdown: bool):
 
-def chat(model_name: str):
     console = Console()
 
     messages: list[BaseMessage] = [
@@ -24,28 +22,31 @@ def chat(model_name: str):
     console.print()
 
     while True:
-        content = Prompt.ask("[red][b]User [b/]")
+        user_content = Prompt.ask("[red][b]User [b/]")
         console.print()
-        messages.append(HumanMessage(content=content))
+        messages.append(HumanMessage(content=user_content))
+        prompt = ChatPromptTemplate.from_messages(messages)
 
-        stream_manager = CallbackManager(
-            [
-                StreamingTerminalCallbackHandler(
-                    output_callback=lambda x: rich_streaming_display(x, live_chat)
-                )
-            ]
-        )
-        chat = ChatOpenAI(
-            model_name=model_name,
-            temperature=0,
-            streaming=True,
-            callback_manager=stream_manager,
-            verbose=True,
-        )
+        model = ChatOpenAI(model=model_name, temperature=0.1)
+        output_parser = StrOutputParser()
 
-        console.print("[blue][b]Assistant :[/b][/blue]")
-        with Live(console=console, refresh_per_second=2) as live_chat:
-            ai_response = chat(messages)
+        chain = prompt | model | output_parser
 
-        messages.append(ai_response)
+        ai_content = ""
+
+        if markdown:
+            console.print("[blue][b]Assistant :[/b][/blue]")
+            with Live('', refresh_per_second=10, console=console) as live:
+                for chunk in chain.stream({}):
+                    ai_content += chunk
+                    live.update(Markdown(ai_content))
+        else:
+            console.print("[blue][b]Assistant :[/b][/blue]", end=" ")
+
+            for chunk in chain.stream({}):
+                ai_content += chunk
+                console.print(chunk, end="", style="green")
+        
+        messages.append(AIMessage(content=ai_content)) 
+        console.print()
         console.print()

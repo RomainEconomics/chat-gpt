@@ -21,12 +21,12 @@ if openai.api_key is None:
 
 
 @app.command("chat")
-def start(model_name: str = "gpt-3.5-turbo"):
+def start(model_name: str = "gpt-4-turbo-preview", markdown: bool = False):
     """
     Start conversation with our assistant
     """
     try:
-        chat(model_name)
+        chat(model_name, markdown=markdown)
     except KeyboardInterrupt:
         try:
             sys.exit(130)
@@ -52,12 +52,3 @@ def youtube(url: str, language: str = "en"):
             sys.exit(130)
         except SystemExit:
             os._exit(130)
-
-
-@app.callback()
-def callback():
-    """
-    CLI which allows you to chat with our lovely assistant.
-
-    Possible to chat with gpt-3.5 or with a youtube video transcript.
-    """
