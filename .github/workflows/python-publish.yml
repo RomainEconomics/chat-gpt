@@ -24,7 +24,8 @@ jobs:
     - name: Install dependencies
       run: poetry install
     - name: Build and Publish
+      env: 
+        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
       run: |
         poetry build
-        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
         poetry publish
