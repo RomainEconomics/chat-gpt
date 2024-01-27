@@ -1,20 +1,14 @@
 
-from langchain.document_loaders import YoutubeLoader
+from operator import itemgetter
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.chat_models import ChatOpenAI
-from langchain import PromptTemplate
-from langchain.chains import LLMChain
+from langchain_community.vectorstores import FAISS
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser 
 from rich.console import Console
-from rich.live import Live
 from rich.prompt import Prompt
-
-from typing import Any
-from rich.live import Live
-from langchain.callbacks import CallbackManager
-from chat_gpt.utils.callbacks import StreamingTerminalCallbackHandler, rich_streaming_display
-
 
 
 def create_db_from_youtube_video_url(url: str, language: str, console: Console) -> FAISS:
@@ -31,7 +25,7 @@ def create_db_from_youtube_video_url(url: str, language: str, console: Console) 
 
     console.print("[cyan]Start splitting transcripts ...")
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=100)
     docs = text_splitter.split_documents(transcript)
 
     console.print("[cyan]Documents created !")
@@ -39,19 +33,16 @@ def create_db_from_youtube_video_url(url: str, language: str, console: Console) 
     return FAISS.from_documents(docs, embeddings)
 
 
-def get_response_from_query(db, query, k, console):
+def get_response_from_query(db: FAISS, query: str, k: int, console: Console):
 
-    docs = db.similarity_search(query, k=k)
-    docs_page_content = " ".join([d.page_content for d in docs])
+    console = Console()
 
-    stream_manager = CallbackManager(
-            [StreamingTerminalCallbackHandler(output_callback= lambda x: rich_streaming_display(x, live_chat))]
-        )
-    llm = ChatOpenAI(temperature=0, streaming=True, callback_manager=stream_manager, verbose=True)
+    # docs = db.similarity_search(query, k=k)
+    # docs_page_content = " ".join([d.page_content for d in docs])
 
-    prompt = PromptTemplate(
-        input_variables=["question", "docs"],
-        template="""
+    llm = ChatOpenAI(temperature=0.1)
+
+    template="""
         You are a helpful assistant that that can answer questions about youtube videos 
         based on the video's transcript.
         
@@ -63,18 +54,25 @@ def get_response_from_query(db, query, k, console):
         If you feel like you don't have enough information to answer the question, say "I don't know".
         
         Your answers should be verbose and detailed.
-        """,
+    """
+
+    prompt = ChatPromptTemplate.from_template(template)
+
+    chain = (
+        {
+            "docs": itemgetter("question") | db.as_retriever(),
+            "question": itemgetter("question"),
+        } 
+        | prompt
+        | llm
+        | StrOutputParser()
     )
 
-    chain = LLMChain(llm=llm, prompt=prompt)
-
     console.print("[blue][b]Assistant :[/b][/blue]")
-    with Live(console=console, refresh_per_second=2) as live_chat:
-        response = chain.run(question=query, docs=docs_page_content)
     
-    response = response.replace("\n", "")
-    return response, docs
-
+    for chunk in chain.stream({"question": query}):
+        console.print(chunk, end="", style="green")
+    
 
 def chat_with_yt_video(url: str, language: str):
 
@@ -89,5 +87,7 @@ def chat_with_yt_video(url: str, language: str):
         content = Prompt.ask("[red][b]User[b/]")
         console.print()
 
-        response, docs = get_response_from_query(db, content, k=5, console=console)
+        get_response_from_query(db, content, k=5, console=console)
+
+        console.print()
         console.print()
