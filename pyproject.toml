@@ -4,30 +4,25 @@ version = "0.3.0"
 description = "Use chapgpt from your terminal"
 authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
 readme = "README.md"
-packages = [{include = "chat_gpt"}]
+packages = [{ include = "chat_gpt" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 openai = "^1.0.0"
 rich = "^13.3"
 typer = "^0.7.0"
-langchain = "^0.1.0"
+langchain = "^0.2.0"
 youtube-transcript-api = "^0.6.0"
-tiktoken = "<0.6.3"
-langchain-openai = "^0.0.5"
-langchain-community = {extras = ["faiss"], version = "^0.0.16"}
-faiss-cpu = "^1.7.4"
+langchain-openai = "^0.1.0"
+langchain-community = "^0.2.1"
 
 [tool.poetry.scripts]
 chat-gpt = "chat_gpt.main:app"
 
-[tool.poetry.group.dev.dependencies]
-ipykernel = "^6.22.0"
-ipywidgets = "^8.1.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-max_length_line = 119
+line-length = 119

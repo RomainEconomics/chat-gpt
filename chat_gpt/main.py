@@ -21,12 +21,14 @@ if openai.api_key is None:
 
 
 @app.command("chat")
-def start(model_name: str = "gpt-4-turbo-preview", markdown: bool = False):
+def start(
+    model_name: str = "gpt-4o", markdown: bool = False, file_path: str | None = None
+):
     """
     Start conversation with our assistant
     """
     try:
-        chat(model_name, markdown=markdown)
+        chat(model_name, markdown=markdown, file_path=file_path)
     except KeyboardInterrupt:
         try:
             sys.exit(130)

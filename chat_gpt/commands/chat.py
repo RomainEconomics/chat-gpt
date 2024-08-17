@@ -8,8 +8,7 @@ from rich.markdown import Markdown
 from rich.live import Live
 
 
-def chat(model_name: str, markdown: bool):
-
+def chat(model_name: str, markdown: bool, file_path: str | None = None):
     console = Console()
 
     messages: list[BaseMessage] = [
@@ -21,22 +20,30 @@ def chat(model_name: str, markdown: bool):
     console.print("Starting a chat ...")
     console.print()
 
+    user_content = None
+
+    if file_path:
+        with open(file_path, "r") as f:
+            user_content = f.read()
+            console.print("Reading from file ...")
+
     while True:
-        user_content = Prompt.ask("[red][b]User [b/]")
+        if user_content is None:
+            user_content = Prompt.ask("[red][b]User [b/]")
+
         console.print()
         messages.append(HumanMessage(content=user_content))
         prompt = ChatPromptTemplate.from_messages(messages)
 
         model = ChatOpenAI(model=model_name, temperature=0.1)
-        output_parser = StrOutputParser()
 
-        chain = prompt | model | output_parser
+        chain = prompt | model | StrOutputParser()
 
         ai_content = ""
 
         if markdown:
             console.print("[blue][b]Assistant :[/b][/blue]")
-            with Live('', refresh_per_second=10, console=console) as live:
+            with Live("", refresh_per_second=10, console=console) as live:
                 for chunk in chain.stream({}):
                     ai_content += chunk
                     live.update(Markdown(ai_content))
@@ -46,7 +53,9 @@ def chat(model_name: str, markdown: bool):
             for chunk in chain.stream({}):
                 ai_content += chunk
                 console.print(chunk, end="", style="green")
-        
-        messages.append(AIMessage(content=ai_content)) 
+
+        messages.append(AIMessage(content=ai_content))
         console.print()
         console.print()
+
+        user_content = None

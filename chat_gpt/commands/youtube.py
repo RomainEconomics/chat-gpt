@@ -1,17 +1,18 @@
-
 from operator import itemgetter
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings.openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser 
+from langchain_core.output_parsers import StrOutputParser
 from rich.console import Console
 from rich.prompt import Prompt
 
 
-def create_db_from_youtube_video_url(url: str, language: str, console: Console) -> FAISS:
+def create_db_from_youtube_video_url(
+    url: str, language: str, console: Console
+) -> FAISS:
     embeddings = OpenAIEmbeddings()
 
     console.print("[cyan]Start by checking if transcripts availabled ...")
@@ -34,7 +35,6 @@ def create_db_from_youtube_video_url(url: str, language: str, console: Console) 
 
 
 def get_response_from_query(db: FAISS, query: str, k: int, console: Console):
-
     console = Console()
 
     # docs = db.similarity_search(query, k=k)
@@ -42,7 +42,7 @@ def get_response_from_query(db: FAISS, query: str, k: int, console: Console):
 
     llm = ChatOpenAI(temperature=0.1)
 
-    template="""
+    template = """
         You are a helpful assistant that that can answer questions about youtube videos 
         based on the video's transcript.
         
@@ -62,23 +62,22 @@ def get_response_from_query(db: FAISS, query: str, k: int, console: Console):
         {
             "docs": itemgetter("question") | db.as_retriever(),
             "question": itemgetter("question"),
-        } 
+        }
         | prompt
         | llm
         | StrOutputParser()
     )
 
     console.print("[blue][b]Assistant :[/b][/blue]")
-    
+
     for chunk in chain.stream({"question": query}):
         console.print(chunk, end="", style="green")
-    
+
 
 def chat_with_yt_video(url: str, language: str):
-
     console = Console()
 
-    #video_url = "https://www.youtube.com/watch?v=NYSWn1ipbgg" "https://www.youtube.com/watch?v=L_Guz73e6fw"
+    # video_url = "https://www.youtube.com/watch?v=NYSWn1ipbgg" "https://www.youtube.com/watch?v=L_Guz73e6fw"
     db = create_db_from_youtube_video_url(url, language, console)
 
     console.print("[green]You can now ask questions about the video's transcript.\n")
