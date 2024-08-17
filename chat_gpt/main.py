@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Optional
 
 import openai
 import typer
@@ -22,7 +23,7 @@ if openai.api_key is None:
 
 @app.command("chat")
 def start(
-    model_name: str = "gpt-4o", markdown: bool = False, file_path: str | None = None
+    model_name: str = "gpt-4o", markdown: bool = False, file_path: Optional[str] = None
 ):
     """
     Start conversation with our assistant
