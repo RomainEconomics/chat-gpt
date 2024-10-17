@@ -1,6 +1,7 @@
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from rich.console import Console
 from rich.prompt import Prompt
@@ -35,7 +36,14 @@ def chat(model_name: str, markdown: bool, file_path: str | None = None):
         messages.append(HumanMessage(content=user_content))
         prompt = ChatPromptTemplate.from_messages(messages)
 
-        model = ChatOpenAI(model=model_name, temperature=0.1)
+        if model_name.startswith("gpt"):
+            model = ChatOpenAI(model=model_name, temperature=0.1)
+        elif model_name.startswith("claude"):
+            model = ChatAnthropic(model_name=model_name, temperature=0.1)
+        else:
+            raise ValueError(
+                f"Invalid model name. Ensure it starts with 'gpt' or 'claude'. Current model provided: {model_name}",
+            )
 
         chain = prompt | model | StrOutputParser()
 

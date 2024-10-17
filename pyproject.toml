@@ -1,28 +1,26 @@
-[tool.poetry]
+[project]
 name = "custom-chat-gpt"
-version = "0.5.0"
+version = "0.6.0"
 description = "Use chapgpt from your terminal"
-authors = ["RomainEconomics <jouhameau.romain@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "chat_gpt" }]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-openai = "^1.0.0"
-rich = "^13.3"
-typer = "^0.7.0"
-langchain = "^0.2.0"
-youtube-transcript-api = "^0.6.0"
-langchain-openai = "^0.1.0"
-langchain-community = "^0.2.1"
-
-[tool.poetry.scripts]
-chat-gpt = "chat_gpt.main:app"
-
+requires-python = ">=3.12"
+dependencies = [
+  "langchain>=0.3.3",
+  "langchain-anthropic>=0.2.3",
+  "langchain-community>=0.3.2",
+  "langchain-openai>=0.2.2",
+  "openai>=1.51.2",
+  "rich>=13.9.2",
+  "typer>=0.12.5",
+  "youtube-transcript-api>=0.6.2",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.ruff]
-line-length = 119
+[tool.hatch.build.targets.wheel]
+packages = ["chat_gpt"]
+
+[project.scripts]
+chat-gpt = "chat_gpt.main:app"

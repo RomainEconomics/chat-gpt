@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Optional
+import yaml
 
 import openai
 import typer
@@ -9,6 +9,7 @@ from youtube_transcript_api import TranscriptsDisabled
 
 from chat_gpt.commands.chat import chat
 from chat_gpt.commands.youtube import chat_with_yt_video
+from chat_gpt.config import CONFIG_PATH, load_config, Config
 
 app = typer.Typer()
 
@@ -23,13 +24,17 @@ if openai.api_key is None:
 
 @app.command("chat")
 def start(
-    model_name: str = "gpt-4o", markdown: bool = False, file_path: Optional[str] = None
+    model_name: str | None = None,
+    markdown: bool = False,
+    file_path: str | None = None,
 ):
     """
     Start conversation with our assistant
     """
+    config: Config = load_config()
+
     try:
-        chat(model_name, markdown=markdown, file_path=file_path)
+        chat(model_name or config.MODEL_NAME, markdown=markdown, file_path=file_path)
     except KeyboardInterrupt:
         try:
             sys.exit(130)
@@ -55,3 +60,24 @@ def youtube(url: str, language: str = "en"):
             sys.exit(130)
         except SystemExit:
             os._exit(130)
+
+
+@app.command()
+def config(model_name: str):
+    """
+    Change model configuration
+    """
+
+    with open(CONFIG_PATH, "r") as file:
+        config = yaml.safe_load(file)
+
+    print("Current model name:", config["model_name"])
+
+    # Update the model_name field
+    config["model_name"] = model_name
+
+    print("New model name:", config["model_name"])
+
+    # Write the updated configuration back to the file
+    with open(CONFIG_PATH, "w") as file:
+        yaml.safe_dump(config, file, default_flow_style=False)
